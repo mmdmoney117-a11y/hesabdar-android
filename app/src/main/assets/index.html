@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123b35"><title>حسابدار شخصی من</title>
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--ink:#172b27;--muted:#71817c;--green:#16745d;--red:#c34c4c;--line:#e5ece8;--soft:#eaf3ef}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,"Noto Sans Arabic",sans-serif;font-size:14px}
+main{max-width:720px;margin:auto;padding:18px 14px 90px}.top{background:linear-gradient(135deg,#123b35,#20775e);color:#fff;border-radius:24px;padding:22px 20px;margin-bottom:14px}
+.top small{opacity:.8}.balance{font-size:29px;font-weight:800;margin:10px 0 4px}.currency{font-size:12px;opacity:.8}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px;box-shadow:0 3px 12px #173b3210}
+.stat small,.hint{color:var(--muted)}.stat strong{display:block;font-size:18px;margin-top:7px;overflow-wrap:anywhere}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#fff;padding:6px;border-radius:16px;position:sticky;top:6px;z-index:3;box-shadow:0 3px 12px #173b3210}
+nav button{border:0;background:transparent;color:var(--muted);padding:11px 3px;border-radius:11px;font:inherit;font-size:12px}
+nav button.active{background:var(--soft);color:var(--green);font-weight:bold}
+section{display:none;margin-top:14px}section.active{display:block}h2{font-size:17px;margin:4px 0 14px}
+label{display:block;color:var(--muted);font-size:12px;margin:12px 0 6px}
+input,select{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;color:var(--ink)}
+button.primary,.action{background:var(--green);color:white;border:0;border-radius:12px;padding:13px 15px;font:inherit;font-weight:bold;width:100%;margin-top:12px}
+button.secondary{background:var(--soft);color:var(--green);border:0;border-radius:12px;padding:12px;font:inherit;font-weight:bold}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}.positive{color:var(--green);font-weight:bold}.negative{color:var(--red);font-weight:bold}
+.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:var(--soft);color:var(--green);font-size:11px}
+.empty{text-align:center;color:var(--muted);padding:22px 5px}
+.progress{height:9px;background:#e8efeb;border-radius:20px;overflow:hidden;margin:9px 0}.progress i{display:block;height:100%;background:#21936e;width:0}
+canvas{width:100%;height:190px}
+.note{font-size:12px;color:var(--muted);line-height:1.9}.market-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.market-item{background:#f7faf8;border:1px solid var(--line);border-radius:13px;padding:12px}.market-item b{display:block;font-size:16px;margin:7px 0;overflow-wrap:anywhere}.market-item small{color:var(--muted)}.live-dot{color:var(--green)}.danger{color:var(--red)}
+footer{text-align:center;color:var(--muted);font-size:11px;margin:24px 0}
+</style></head>
+<body><main>
+<header class="top"><small>حسابدار شخصی من · تومان</small><div id="todayClock" style="font-size:13px;margin-top:9px">در حال دریافت زمان…</div><div class="balance" id="balance">۰</div><div class="currency">موجودی خالص ثبت‌شده</div></header>
+<div class="grid">
+ <div class="card stat"><small>کل درآمد</small><strong class="positive" id="income">۰</strong></div>
+ <div class="card stat"><small>کل هزینه</small><strong class="negative" id="expense">۰</strong></div>
+ <div class="card stat"><small>پس‌انداز</small><strong id="saving">۰</strong></div>
+ <div class="card stat"><small>بدهی خالص</small><strong id="netDebt">۰</strong></div>
+</div>
+<nav><button class="active" data-tab="home">خانه</button><button data-tab="add">ثبت تراکنش</button><button data-tab="accounts">حساب‌های بانکی</button><button data-tab="market">قیمت‌ها</button><button data-tab="debts">بدهی و طلب</button><button data-tab="reports">گزارش</button></nav>
+<section id="home" class="active">
+ <div class="card"><h2>دسترسی سریع</h2><div class="actions"><button class="secondary" onclick="showTab('add');setKind('income')">＋ ثبت درآمد</button><button class="secondary" onclick="showTab('add');setKind('expense')">－ ثبت هزینه</button></div><div class="row"><span>هدف پس‌انداز</span><strong id="goalText">۰ تومان</strong></div><div class="progress"><i id="goalBar"></i></div><div class="hint" id="goalPercent">۰٪ از هدف</div><label>تعیین هدف پس‌انداز (تومان)</label><input id="goal" type="number" min="0" placeholder="مثلاً ۲۰۰۰۰۰۰۰"><button class="primary" onclick="saveGoal()">ذخیره هدف</button></div>
+ <div class="card" style="margin-top:12px"><h2>حساب‌های بانکی</h2><div id="homeAccounts" class="empty">هنوز حسابی اضافه نشده است.</div></div>
+  <div class="card" style="margin-top:12px"><h2>آخرین تراکنش‌ها</h2><div id="recent" class="empty">هنوز تراکنشی ثبت نشده است.</div></div>
+</section>
+<section id="add"><div class="card"><h2>ثبت تراکنش جدید</h2>
+<label>نوع تراکنش</label><select id="type"><option value="income">درآمد</option><option value="expense">هزینه</option><option value="saving">پس‌انداز</option></select>
+<label>مبلغ (تومان)</label><input id="amount" type="number" min="1" inputmode="numeric" placeholder="مبلغ را وارد کن">
+<label>عنوان / توضیحات</label><input id="desc" maxlength="70" placeholder="مثلاً حقوق، خرید روزانه، قبض">
+<label>دسته‌بندی</label><select id="category"><option>حقوق</option><option>فروش</option><option>خوراک</option><option>حمل‌ونقل</option><option>خانه و قبض</option><option>درمان</option><option>تفریح</option><option>خرید</option><option>آموزش</option><option>سایر</option></select>
+<label>تاریخ و ساعت تراکنش</label><input id="date" type="datetime-local" step="1">
+ <label>حساب بانکی (اختیاری)</label><select id="txAccount"><option value="">بدون اتصال به حساب</option></select>
+<button class="primary" onclick="addTransaction()">ثبت تراکنش</button><p class="note">ثبت‌ها در حافظه همین مرورگر ذخیره می‌شوند. برای جلوگیری از ازدست‌رفتن اطلاعات، مرتب نسخه پشتیبان بگیر.</p></div></section>
+<section id="accounts">
+ <div class="card"><h2>افزودن حساب بانکی</h2><label>نام بانک / مؤسسه</label><input id="bankName" maxlength="50" placeholder="مثلاً بانک ملی"><label>عنوان حساب</label><input id="accountName" maxlength="50" placeholder="مثلاً حساب پس‌انداز"><label>موجودی اولیه (تومان)</label><input id="initialBalance" type="number" min="0" inputmode="numeric" placeholder="موجودی فعلی در زمان افزودن"><button class="primary" onclick="addAccount()">افزودن حساب</button><p class="note">موجودی حساب با تراکنش‌هایی که به آن حساب متصل می‌کنی محاسبه می‌شود. موجودی اولیه را فقط یک‌بار وارد کن.</p></div>
+ <div class="card" style="margin-top:12px"><h2>حساب‌های من</h2><div id="accountList" class="empty">هنوز حسابی اضافه نشده است.</div></div>
+</section>
+<section id="market"><div class="card"><h2>تابلوی قیمت بازار</h2><p class="note">قیمت‌ها از سرویس عمومی NerkhAra دریافت می‌شوند و معمولاً هر ۱۰ دقیقه به‌روزرسانی می‌شوند. نرخ بازار آزاد است و ممکن است با نرخ صرافی یا معامله شما تفاوت داشته باشد.</p><div class="market-grid" id="marketPrices"><div class="empty">در حال دریافت قیمت‌ها…</div></div><div class="row"><span class="hint" id="marketUpdated">زمان به‌روزرسانی: —</span><button class="secondary" onclick="loadMarket()">به‌روزرسانی</button></div><div class="note" id="marketStatus">قیمت‌ها پس از دریافت نمایش داده می‌شوند.</div><p class="note">منبع: <a href="https://nerkhara.com/" target="_blank" rel="noopener">NerkhAra</a></p></div></section>
+<section id="debts"><div class="card"><h2>مدیریت بدهی و طلب</h2>
+<label>نوع</label><select id="debtType"><option value="debt">بدهی من</option><option value="receivable">طلب من</option></select>
+<label>نام شخص / توضیح</label><input id="person" placeholder="مثلاً علی - قرض">
+<label>مبلغ (تومان)</label><input id="debtAmount" type="number" min="1" inputmode="numeric" placeholder="مبلغ">
+<label>سررسید (اختیاری)</label><input id="due" type="date">
+<button class="primary" onclick="addDebt()">ثبت بدهی / طلب</button></div>
+<div class="card" style="margin-top:12px"><h2>فهرست بدهی‌ها و طلب‌ها</h2><div id="debtList" class="empty">موردی ثبت نشده است.</div></div></section>
+<section id="reports">
+<div class="card"><h2>۱. درآمد و هزینه ماهانه</h2><canvas id="monthlyChart" width="640" height="300"></canvas><div class="note">مقایسه درآمد و هزینه بر اساس ماه ثبت تراکنش‌ها</div></div>
+<div class="card" style="margin-top:12px"><h2>۲. ترکیب دسته‌بندی هزینه‌ها</h2><canvas id="categoryChart" width="640" height="300"></canvas><div class="note">برای نمایش دقیق‌تر، هنگام ثبت هزینه دسته‌بندی را انتخاب کن.</div></div>
+<div class="card" style="margin-top:12px"><h2>۳. روند پس‌انداز</h2><canvas id="savingChart" width="640" height="280"></canvas><div class="note">روند تجمعی پس‌انداز بر اساس تاریخ ثبت</div></div>
+<div class="card" style="margin-top:12px"><h2>۴. بدهی در برابر طلب</h2><canvas id="debtChart" width="640" height="250"></canvas><div class="note">فقط موارد باز و تسویه‌نشده محاسبه می‌شوند.</div></div>
+<div class="card" style="margin-top:12px"><h2>گزارش کلی</h2><div id="reportRows"></div></div>
+<div class="card" style="margin-top:12px"><h2>پشتیبان‌گیری و بازیابی</h2><p class="note">یک فایل پشتیبان از تراکنش‌ها، بدهی‌ها و هدف پس‌انداز بساز و در جای امن نگه دار. برای بازیابی، فایل قبلی را انتخاب کن.</p><button class="primary" onclick="backup()">دریافت فایل پشتیبان</button><label>بازیابی از فایل پشتیبان</label><input type="file" id="restoreFile" accept="application/json"><button class="secondary" style="width:100%;margin-top:10px" onclick="restore()">بازیابی اطلاعات</button><p class="note danger">بازیابی، اطلاعات فعلی را با اطلاعات فایل جایگزین می‌کند.</p></div>
+</section>
+<footer>اطلاعات مالی فقط روی همین دستگاه و در همین مرورگر ذخیره می‌شود.</footer>
+</main>
+<script>
+const KEY='personal_accountant_fa_v1';
+let state={transactions:[],debts:[],goal:0,accounts:[]};
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(Number(n)||0).toLocaleString('fa-IR');
+function load(){try{let x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&Array.isArray(x.transactions)&&Array.isArray(x.debts))state={...state,...x,accounts:Array.isArray(x.accounts)?x.accounts:[]}}catch(e){}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function showTab(id){document.querySelectorAll('section').forEach(s=>s.classList.toggle('active',s.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id))}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function setKind(k){$('type').value=k}
+function localDateTime(d=new Date()){const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`}
+$('date').value=localDateTime();
+function updateClock(){const d=new Date();$('todayClock').textContent=d.toLocaleDateString('fa-IR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' · '+d.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' (زمان دستگاه)'}
+updateClock();setInterval(updateClock,1000);
+function totals(){let t=state.transactions;return {income:t.filter(x=>x.type==='income').reduce((a,x)=>a+x.amount,0),expense:t.filter(x=>x.type==='expense').reduce((a,x)=>a+x.amount,0),saving:t.filter(x=>x.type==='saving').reduce((a,x)=>a+x.amount,0)}}
+function addTransaction(){let amount=Number($('amount').value),desc=$('desc').value.trim();if(!amount||amount<1){alert('مبلغ معتبر وارد کن.');return}state.transactions.unshift({id:Date.now(),type:$('type').value,amount,desc:desc||'بدون عنوان',category:$('category').value,date:$('date').value,accountId:$('txAccount').value||null});$('amount').value='';$('desc').value='';$('date').value=localDateTime();persist();showTab('home')}
+function addDebt(){let amount=Number($('debtAmount').value),person=$('person').value.trim();if(!amount||amount<1){alert('مبلغ معتبر وارد کن.');return}state.debts.unshift({id:Date.now(),type:$('debtType').value,amount,person:person||'بدون نام',due:$('due').value,paid:false});$('debtAmount').value='';$('person').value='';$('due').value='';persist()}
+function addAccount(){let bank=$('bankName').value.trim(),name=$('accountName').value.trim(),initial=Number($('initialBalance').value);if(!bank||!name||!Number.isFinite(initial)||initial<0){alert('نام بانک، عنوان حساب و موجودی اولیه معتبر را وارد کن.');return}state.accounts.push({id:Date.now(),bank,name,initial});$('bankName').value='';$('accountName').value='';$('initialBalance').value='';persist()}
+function removeAccount(id){if(!confirm('این حساب حذف شود؟ تراکنش‌های متصل به آن حذف نمی‌شوند، اما دیگر در موجودی حساب‌ها محاسبه نخواهند شد.'))return;state.accounts=state.accounts.filter(a=>a.id!==id);persist()}
+function accountBalance(a){return a.initial+state.transactions.filter(t=>String(t.accountId)===String(a.id)).reduce((sum,t)=>sum+(t.type==='income'?t.amount:(t.type==='expense'||t.type==='saving'?-t.amount:0)),0)}
+function settleDebt(id){let x=state.debts.find(d=>d.id===id);if(x){x.paid=!x.paid;persist()}}
+function removeDebt(id){if(confirm('این مورد حذف شود؟')){state.debts=state.debts.filter(d=>d.id!==id);persist()}}
+function removeTx(id){if(confirm('این تراکنش حذف شود؟')){state.transactions=state.transactions.filter(t=>t.id!==id);persist()}}
+function saveGoal(){state.goal=Math.max(0,Number($('goal').value)||0);persist()}
+function backup(){const data=JSON.stringify(state,null,2);if(window.AndroidBridge&&AndroidBridge.saveBackup){AndroidBridge.saveBackup(btoa(unescape(encodeURIComponent(data))));return}let blob=new Blob([data],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='hesabdar-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+function restore(){let f=$('restoreFile').files[0];if(!f){alert('ابتدا فایل پشتیبان را انتخاب کن.');return}let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.transactions)||!Array.isArray(x.debts))throw Error();state={transactions:x.transactions,debts:x.debts,goal:Number(x.goal)||0,accounts:Array.isArray(x.accounts)?x.accounts:[]};persist();alert('اطلاعات بازیابی شد.')}catch(e){alert('فایل پشتیبان معتبر نیست.')}};r.readAsText(f)}
+function render(){let t=totals(),debts=state.debts.filter(x=>x.type==='debt'&&!x.paid).reduce((a,x)=>a+x.amount,0),rec=state.debts.filter(x=>x.type==='receivable'&&!x.paid).reduce((a,x)=>a+x.amount,0),balance=t.income-t.expense-t.saving;
+let opening=state.accounts.reduce((a,x)=>a+x.initial,0);$('balance').textContent=fmt(balance+opening);
+ $('txAccount').innerHTML='<option value="">بدون اتصال به حساب</option>'+state.accounts.map(a=>`<option value="${a.id}">${esc(a.bank+' - '+a.name)}</option>`).join('');
+ $('accountList').innerHTML=state.accounts.length?state.accounts.map(a=>`<div class="row"><div><b>${esc(a.bank)} · ${esc(a.name)}</b><div class="hint">موجودی اولیه: ${fmt(a.initial)} تومان</div><strong>${fmt(accountBalance(a))} تومان</strong></div><button class="secondary" onclick="removeAccount(${a.id})">حذف</button></div>`).join(''):'<div class="empty">هنوز حسابی اضافه نشده است.</div>';
+ $('homeAccounts').innerHTML=state.accounts.length?state.accounts.map(a=>`<div class="row"><span>${esc(a.bank)} · ${esc(a.name)}</span><b>${fmt(accountBalance(a))} تومان</b></div>`).join(''):'<div class="empty">هنوز حسابی اضافه نشده است.</div>';
+$('income').textContent=fmt(t.income);$('expense').textContent=fmt(t.expense);$('saving').textContent=fmt(t.saving);$('netDebt').textContent=fmt(debts-rec);
+$('goal').value=state.goal||'';$('goalText').textContent=fmt(state.goal)+' تومان';let p=state.goal?Math.min(100,t.saving/state.goal*100):0;$('goalBar').style.width=p+'%';$('goalPercent').textContent=fmt(p)+'٪ از هدف';
+$('recent').innerHTML=state.transactions.length?state.transactions.slice(0,6).map(x=>`<div class="row"><div><b>${esc(x.desc)}</b><div class="hint">${esc(formatTxDate(x))}</div></div><span class="${x.type==='income'?'positive':x.type==='expense'?'negative':''}">${x.type==='income'?'+':x.type==='expense'?'-':''}${fmt(x.amount)} تومان <button class="secondary" style="padding:5px 8px;margin-right:5px" onclick="removeTx(${x.id})">حذف</button></span></div>`).join(''):'<div class="empty">هنوز تراکنشی ثبت نشده است.</div>';
+$('debtList').innerHTML=state.debts.length?state.debts.map(x=>`<div class="row"><div><b>${esc(x.person)}</b><div class="hint">${x.type==='debt'?'بدهی':'طلب'} · ${x.due?'سررسید: '+esc(x.due):'بدون سررسید'} · ${x.paid?'تسویه‌شده':'باز'}</div><strong>${fmt(x.amount)} تومان</strong></div><div><button class="secondary" onclick="settleDebt(${x.id})">${x.paid?'بازگشایی':'تسویه'}</button><button class="secondary" onclick="removeDebt(${x.id})">حذف</button></div></div>`).join(''):'<div class="empty">موردی ثبت نشده است.</div>';
+$('reportRows').innerHTML=[['درآمد',t.income],['هزینه',t.expense],['پس‌انداز',t.saving],['بدهی باز',debts],['طلب باز',rec],['موجودی اولیه حساب‌ها',opening],['مانده خالص',balance+opening]].map(a=>`<div class="row"><span>${a[0]}</span><b>${fmt(a[1])} تومان</b></div>`).join('');
+drawMonthly();drawCategories();drawSavings();drawDebtChart()}
+function formatTxDate(x){if(x.date&&x.date.includes('T')){let d=new Date(x.date);if(!isNaN(d))return d.toLocaleDateString('fa-IR')+' · '+d.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}return x.date?esc(x.date)+' · ساعت ثبت قدیمی نامشخص':'زمان نامشخص'}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+function canvasBase(id){const c=$(id);if(!c)return null;const ctx=c.getContext('2d');const w=c.width,h=c.height;ctx.clearRect(0,0,w,h);ctx.font='14px Tahoma';ctx.fillStyle='#71817c';ctx.textAlign='center';return {c,ctx,w,h}}
+function drawMonthly(){const o=canvasBase('monthlyChart');if(!o)return;const {ctx,w,h}=o;const groups={};state.transactions.forEach(x=>{const k=(x.date||'').slice(0,7)||'نامشخص';groups[k]??={income:0,expense:0};if(x.type==='income')groups[k].income+=x.amount;if(x.type==='expense')groups[k].expense+=x.amount});const keys=Object.keys(groups).sort().slice(-6);if(!keys.length){ctx.fillText('هنوز داده‌ای برای نمایش وجود ندارد',w/2,h/2);return}const max=Math.max(1,...keys.flatMap(k=>[groups[k].income,groups[k].expense]));const slot=(w-50)/keys.length;keys.forEach((k,i)=>{const x=30+i*slot;[['income','#188567'],['expense','#c34c4c']].forEach(([type,color],j)=>{const bh=groups[k][type]/max*(h-85);ctx.fillStyle=color;ctx.fillRect(x+j*slot*.28,h-35-bh,slot*.22,bh)});ctx.fillStyle='#263b35';ctx.fillText(k.slice(2),x+slot*.25,h-12)});ctx.textAlign='right';ctx.fillStyle='#188567';ctx.fillText('■ درآمد',w-12,18);ctx.fillStyle='#c34c4c';ctx.fillText('■ هزینه',w-100,18)}
+function drawCategories(){const o=canvasBase('categoryChart');if(!o)return;const {ctx,w,h}=o;const sums={};state.transactions.filter(x=>x.type==='expense').forEach(x=>sums[x.category||'سایر']=(sums[x.category||'سایر']||0)+x.amount);const entries=Object.entries(sums).sort((a,b)=>b[1]-a[1]).slice(0,7);if(!entries.length){ctx.fillText('هنوز هزینه‌ای ثبت نشده است',w/2,h/2);return}const max=Math.max(...entries.map(x=>x[1]));entries.forEach(([name,val],i)=>{const y=28+i*36;ctx.textAlign='right';ctx.fillStyle='#263b35';ctx.fillText(name,w-12,y+13);ctx.fillStyle='#e8efeb';ctx.fillRect(12,y,w*.58,16);ctx.fillStyle='#21936e';ctx.fillRect(12,y,w*.58*val/max,16);ctx.textAlign='left';ctx.fillStyle='#71817c';ctx.fillText(fmt(val),18,y+13)})}
+function drawSavings(){const o=canvasBase('savingChart');if(!o)return;const {ctx,w,h}=o;const arr=state.transactions.filter(x=>x.type==='saving').slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));if(!arr.length){ctx.fillText('هنوز پس‌اندازی ثبت نشده است',w/2,h/2);return}let sum=0;const vals=arr.map(x=>sum+=x.amount),max=Math.max(1,...vals),left=35,right=w-20,top=20,bottom=h-35;ctx.strokeStyle='#21936e';ctx.lineWidth=3;ctx.beginPath();vals.forEach((v,i)=>{const x=left+(vals.length===1?0:i/(vals.length-1))*(right-left),y=bottom-v/max*(bottom-top);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();ctx.fillStyle='#71817c';ctx.textAlign='right';ctx.fillText('مجموع: '+fmt(sum)+' تومان',right,14)}
+function drawDebtChart(){const o=canvasBase('debtChart');if(!o)return;const {ctx,w,h}=o;const debt=state.debts.filter(x=>x.type==='debt'&&!x.paid).reduce((a,x)=>a+x.amount,0),rec=state.debts.filter(x=>x.type==='receivable'&&!x.paid).reduce((a,x)=>a+x.amount,0),max=Math.max(1,debt,rec);[['بدهی',debt,'#c34c4c'],['طلب',rec,'#188567']].forEach(([name,val,color],i)=>{const y=45+i*85;ctx.textAlign='right';ctx.fillStyle='#263b35';ctx.fillText(name+' · '+fmt(val)+' تومان',w-12,y);ctx.fillStyle='#e8efeb';ctx.fillRect(12,y+12,w-35,24);ctx.fillStyle=color;ctx.fillRect(12,y+12,(w-35)*val/max,24)})}
+
+function drawChart(t){let c=$('chart'),ctx=c.getContext('2d'),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);let vals=[t.income,t.expense,t.saving],labels=['درآمد','هزینه','پس‌انداز'],max=Math.max(...vals,1),colors=['#188567','#c34c4c','#d39b35'];vals.forEach((v,i)=>{let x=45+i*205,bh=(v/max)*145;ctx.fillStyle=colors[i];ctx.fillRect(x,h-45-bh,105,bh);ctx.fillStyle='#263b35';ctx.font='18px Tahoma';ctx.textAlign='center';ctx.fillText(labels[i],x+52,h-15);ctx.font='14px Tahoma';ctx.fillText(fmt(v),x+52,h-55-bh)})}
+async function loadMarket(){const box=$('marketPrices');box.innerHTML='<div class="empty">در حال دریافت قیمت‌ها…</div>';$('marketStatus').textContent='';try{const r=await fetch('https://nerkhara.com/api/v1/latest.json',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();const ids=['usd','gold-18k','coin-emami','btc','xau'];const names={'usd':'دلار آمریکا','gold-18k':'طلای ۱۸ عیار (گرمی)','coin-emami':'سکه امامی','btc':'بیت‌کوین','xau':'انس جهانی طلا'};const found=ids.map(id=>data.items.find(x=>x.id===id)).filter(Boolean);if(!found.length)throw Error('داده‌ای دریافت نشد');box.innerHTML=found.map(x=>{let unit=x.unit==='IRT'?'تومان':x.unit==='USD'?'دلار':'USDT';let price=x.price_irt??x.price;return `<div class="market-item"><small>${names[x.id]||x.name?.fa||x.id}</small><b>${fmt(price)} ${unit}</b><small>${x.change_pct==null?'':(x.change_pct>0?'+':'')+x.change_pct+'٪ · '}${x.stale?'داده قدیمی':'به‌روز'}</small></div>`}).join('');let latest=found.map(x=>x.updated_utc).filter(Boolean).sort().at(-1);$('marketUpdated').textContent='آخرین داده: '+(latest?new Date(latest+'Z').toLocaleString('fa-IR'):'زمان اعلام نشده');$('marketStatus').textContent='قیمت‌ها با واحد اعلام‌شده در منبع نمایش داده شده‌اند؛ دلار و طلای ایران به تومان، انس به دلار و بیت‌کوین به USDT.'}catch(e){box.innerHTML='<div class="empty">دریافت قیمت‌ها ممکن نشد. اتصال اینترنت را بررسی و دوباره تلاش کن.</div>';$('marketStatus').textContent='خطا: '+e.message+' · قیمت ساختگی نمایش داده نمی‌شود.'}}
+load();render();loadMarket();setInterval(loadMarket,600000);
+</script></body></html>
